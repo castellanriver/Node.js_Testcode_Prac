@@ -87,7 +87,7 @@ describe('Auth Middleware', () =>{
     const request = httpMocks.createRequest({
       method: 'GET',
       url: '/tweets',
-      headers: { Authrization: `Bearer ${token}`},
+      headers: { Authorization: `Bearer ${token}`},
     });
     const response = httpMocks.createResponse();
     const next = jest.fn();

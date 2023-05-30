@@ -10,14 +10,14 @@ export class TweetController {
   getTweets = async (req, res) => {
     const username = req.query.username;
     const data = await (username
-      ? tweets.getAllByUsername(username)
-      : tweets.getAll());
+      ? this.tweets.getAllByUsername(username)
+      : this.tweets.getAll());
     res.status(200).json(data);
   }
 
   getTweet = async (req, res, next) => {
     const id = req.params.id;
-    const tweet = await tweets.getById(id);
+    const tweet = await this.tweets.getById(id);
     if (tweet) {
       res.status(200).json(tweet);
     } else {

@@ -17,6 +17,7 @@ describe('TweetController', () => {
   });
 
   describe('getTweets', () => {
+
     it('returns all tweets when username is not provided', async () => {
       const request = httpMocks.createRequest();
       const response = httpMocks.createResponse();
@@ -36,12 +37,12 @@ describe('TweetController', () => {
     it('returns tweets for the given user when username is provided', async () => {
       const username = faker.internet.userName();
       const request = httpMocks.createRequest({
-        query: { username }
+        query: { username },
       });
       const response = httpMocks.createResponse();
 
       const userTweets = [
-        { text: faker.random.words(3) },
+        { text: faker.random.words(3) }
       ]
       tweetsRepository.getAllByUsername = () => userTweets;
 
@@ -51,7 +52,7 @@ describe('TweetController', () => {
       await tweetController.getTweets(request, response)
 
       expect(response.statusCode).toBe(200);
-      expect(response._getJSONData()).toEqual(allTweets);
+      expect(response._getJSONData()).toEqual(userTweets);
       // expect(tweetsRepository.getAllByUsername).toHaveBeenCalledTimes(1);
 
       // username이 호출이 되었는가?
@@ -68,7 +69,7 @@ describe('TweetController', () => {
     beforeEach(() => {
       tweetId = faker.random.alphaNumeric(16);
       request = httpMocks.createRequest({
-        params: { id: tweetId }
+        params: { id: tweetId },
       });
       response = httpMocks.createResponse();
     })
@@ -76,7 +77,7 @@ describe('TweetController', () => {
     it('returns tweet if tweet exists', async () => {
       const aTweet = { text: faker.random.words(3) }
 
-      tweetRepository.getById = jest.fn(() => aTweet)
+      tweetsRepository.getById = jest.fn(() => aTweet)
 
       await tweetController.getTweet(request, response);
                                     
@@ -86,7 +87,7 @@ describe('TweetController', () => {
     });
 
     it('returns 404 if tweet does not exist', async () => {
-      tweetRepository.getById = jest.fn(() => undefined);
+      tweetsRepository.getById = jest.fn(() => undefined);
 
       await tweetController.getTweet(request, response);
 
@@ -95,7 +96,7 @@ describe('TweetController', () => {
         message: `Tweet id(${tweetId}) not found`
       });
       expect(tweetsRepository.getById).toHaveBeenCalledWith(tweetId)
-    })
-  })
+    });
+  });
   
 })

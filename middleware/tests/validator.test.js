@@ -26,12 +26,12 @@ describe('Validator Middleware', () => {
     console.log(errorMsg)
     validator.validationResult = jest.fn(() => ({
       isEmpty: () => false,
-      array: () => [{msg: 'Error!'}]
+      array: () => [{msg: errorMsg}]
     }));
     validate(request, response, next);
 
     expect(next).not.toBeCalled();
     expect(response.statusCode).toBe(400)
-    expect(response._getJSONData().message).toBe(errorMsg)
+    expect(response._getJSONData().message).toMatch(errorMsg)
   })
 })
