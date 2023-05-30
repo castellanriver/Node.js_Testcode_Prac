@@ -99,4 +99,33 @@ describe('TweetController', () => {
     });
   });
   
+  describe('createTweet', () => {
+    let newTweet, authorId, request, response;
+
+    beforeEach(() => {
+      newTweet = faker.random.words(3);
+      authorId = faker.random.alphaNumeric(16);
+      request = httpMocks.createRequest({
+        body: { text: newTweet },
+        userId: authorId,
+      });
+      response = httpMocks.createResponse();
+    });
+
+    it('returns 201 with created tweet object including userId', async () =>{
+      tweetsRepository.create = jest.fn((text, userId) => ({
+        text,
+        userId,
+      }));
+
+      await tweetController.createTweet(request, response);
+
+      expect(response.statusCode).toBe(201);
+      expect(response._getJSONData()).toMatchObject({
+        text: newTweet,
+        userId: authorId,
+      });
+      expect(tweetsRepository.create).toHaveBeenCalledWith(newTweet, authorId);
+    })
+  })
 })
