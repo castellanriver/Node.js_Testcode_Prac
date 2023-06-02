@@ -195,7 +195,7 @@ describe('TweetController', () => {
       expect(response.statusCode).toBe(404);
 
       expect(response._getJSONData()).toMatchObject({
-        messgae: `Tweet not found: ${tweetId}`,
+        message: `Tweet not found: ${tweetId}`,
       });
     });
   });
