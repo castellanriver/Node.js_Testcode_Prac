@@ -127,5 +127,128 @@ describe('TweetController', () => {
       });
       expect(tweetsRepository.create).toHaveBeenCalledWith(newTweet, authorId);
     })
-  })
-})
+
+    it('should send an event to a websocket channel', async () =>{
+      tweetsRepository.create = jest.fn((text, userId) => ({
+        text,
+        userId,
+      }));
+
+      await tweetController.createTweet(request, response);
+
+      expect(mockedSocket.emit).toHaveBeenCalledWith('tweets', {
+        text: newTweet,
+        userId: authorId,
+      });
+    });
+  });
+
+  describe('updateTweet', () => {
+    let tweetId, updateText, request, response, authorId;
+    beforeEach(() => {
+      tweetId = faker.random.alphaNumeric(16);
+      updateText = faker.random.words(3);
+      authorId = faker.random.alphaNumeric(16);
+      request = httpMocks.createRequest({
+        params: { id: tweetId },
+        body: { text: updateText },
+        userId: authorId,
+      });
+      response = httpMocks.createResponse();
+    });
+
+    it('updates the repository and return 200', async () => {
+      tweetsRepository.getById = () => ({
+        text: faker.random.words(3),
+        userId: authorId,
+      });
+      tweetsRepository.update = (tweetId, newText) => ({
+        text: newText
+      });
+
+      await tweetController.updateTweet(request, response);
+
+      expect(response.statusCode).toBe(200);
+      expect(response._getJSONData()).toMatchObject({
+        text: updateText,
+      });
+    });
+
+    it('returns 403 and should not update the repository if the tweet does not belong belong to the user', async () => {
+      tweetsRepository.getById = () => ({
+        text: faker.random.words(3),
+        userId: faker.random.alphaNumeric(16),
+      });
+      tweetsRepository.update = jest.fn();
+
+      await tweetController.updateTweet(request, response);
+
+      expect(response.statusCode).toBe(403);
+    })
+
+    it('returns 404 and should not update the repository if the tweet does not exist', async () => {
+      tweetsRepository.getById = () => undefined;
+      tweetsRepository.update = jest.fn();
+
+      await tweetController.updateTweet(request, response);
+
+      expect(response.statusCode).toBe(404);
+
+      expect(response._getJSONData()).toMatchObject({
+        messgae: `Tweet not found: ${tweetId}`,
+      });
+    });
+  });
+
+  describe('deleteTweet', () => {
+    let tweetId, request, response, authorId;
+    beforeEach(() => {
+      tweetId = faker.random.alphaNumeric(16);
+      authorId = faker.random.alphaNumeric(16);
+      request = httpMocks.createRequest({
+        params: { id: tweetId },
+        userId: authorId,
+      });
+      response = httpMocks.createResponse();
+    });
+
+    it('resturns 204 and remove the tweet from the repository if the tweet exists', async () => {
+      tweetsRepository.getById = () => ({
+        userId: authorId,
+      });
+
+      tweetsRepository.remove = jest.fn();
+
+      await tweetController.deleteTweet(request, response);
+
+      expect(response.statusCode).toBe(204);
+      expect(tweetsRepository.remove).toHaveBeenCalledWith(tweetId);
+    });
+
+    it('returns 403 and should not update the repository if the tweet does not belong to the user', async () => {
+      tweetsRepository.getById = () => ({
+        userId: faker.random.alphaNumeric(16),
+      });
+
+      tweetsRepository.remove = jest.fn();
+
+      await tweetController.deleteTweet(request, response);
+
+      expect(response.statusCode).toBe(403);
+      expect(tweetsRepository.remove).not.toHaveBeenCalled();
+    });
+
+    it('returns 404 and should not update the repository if the tweet does not exist', async () => {
+      tweetsRepository.getById = () => undefined;
+      tweetsRepository.remove = jest.fn();
+
+      await tweetController.deleteTweet(request, response);
+
+      expect(response.statusCode).toBe(404);
+      expect(response._getJSONData()).toMatchObject({
+        message: `Tweet not found: ${tweetId}`,
+      });
+      expect(tweetsRepository.remove).not.toHaveBeenCalled();
+    });
+  });
+});
